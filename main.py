@@ -1,8 +1,13 @@
 import os
-from docx import Document  # Word 파일 저장용 모듈 사용
+import datetime
+from docx import Document  # Word 문서 저장용 모듈
 
-# 파일을 읽어서 문자열로 반환하는 함수
+# --- 파일을 읽어서 문자열로 반환하는 함수 ---
 def load_file(filepath):
+    """
+    주어진 파일 경로를 받아 파일을 열고, 내용을 UTF-8로 읽어서 반환한다.
+    파일이 없으면 FileNotFoundError가 발생하므로 이를 처리해 사용자에게 알리고 None을 반환한다.
+    """
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             return f.read()
@@ -10,8 +15,12 @@ def load_file(filepath):
         print(f"[오류] 파일을 찾을 수 없습니다: {filepath}")
         return None
 
-# 폴더 내 파일 목록을 출력하고 리스트로 반환하는 함수
+# --- 폴더 내 파일 목록을 출력하고 리스트로 반환하는 함수 ---
 def list_files(folder):
+    """
+    지정한 폴더에서 파일 목록을 읽어와 사용자에게 번호와 함께 출력한다.
+    폴더가 없거나 파일이 하나도 없으면 적절한 안내 메시지를 출력하고 빈 리스트를 반환한다.
+    """
     try:
         files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
         if not files:
@@ -25,26 +34,36 @@ def list_files(folder):
         print(f"[오류] 폴더 '{folder}'를 찾을 수 없습니다.")
         return []
 
-# 텍스트에서 온점(.) 기준으로 문장을 나눈 후 (O/X) 를 붙이는 함수
+# --- 텍스트를 문장 단위로 분리하고 각 문장 끝에 '(O/X)' 붙이는 함수 ---
 def generate_ox_quiz(text):
-    sentences = [s.strip() for s in text.split('.') if s.strip()]  # 공백 제거 + 빈 문장 제외
-    return [s + '. (O/X)' for s in sentences]  # 각 문장 끝에 (O/X) 붙이기
+    """
+    입력된 텍스트를 온점(.)을 기준으로 문장으로 분리한다.
+    각 문장 끝에 ' (O/X)'를 붙여서 리스트로 반환한다.
+    빈 문장이나 공백 문장은 제외한다.
+    """
+    sentences = [s.strip() for s in text.split('.') if s.strip()]
+    return [s + '. (O/X)' for s in sentences]
 
-# 퀴즈 목록을 Word(.docx) 파일로 저장하는 함수
+# --- 퀴즈 목록을 Word(.docx) 파일로 저장하는 함수 ---
 def save_to_docx(quiz_items, filename="quiz_output.docx"):
+    """
+    퀴즈 문장 리스트를 받아 새 Word 문서로 저장한다.
+    문서 제목을 추가하고 각 퀴즈 문장을 번호와 함께 문단으로 삽입한다.
+    저장이 완료되면 사용자에게 저장된 파일명을 출력한다.
+    """
     doc = Document()
-    doc.add_heading('O/X 퀴즈 목록', level=1)  # 문서 제목 설정
+    doc.add_heading('O/X 퀴즈 목록', level=1)
     for i, item in enumerate(quiz_items, 1):
-        doc.add_paragraph(f"{i}. {item}")  # 번호 + 퀴즈 문장 추가
+        doc.add_paragraph(f"{i}. {item}")
     doc.save(filename)
     print(f"퀴즈가 Word 파일로 저장되었습니다: {filename}")
 
-# 메인 프로그램 흐름을 담당하는 함수
+# --- 메인 프로그램 흐름을 담당하는 함수 ---
 def main():
     folder = "study_files"
 
     while True:
-        files = list_files(folder)  # 파일 목록 불러오기
+        files = list_files(folder)
         if not files:
             print("프로그램을 종료합니다.")
             break
@@ -72,12 +91,12 @@ def main():
             for i, q in enumerate(quiz_items, 1):
                 print(f"{i}. {q}")
 
-            # 사용자에게 Word 저장 여부 묻기
             save_docx = input("\n현재 퀴즈를 Word(.docx) 파일로 저장하시겠습니까? (Y/N): ").strip().lower()
             if save_docx == 'y':
-                docx_name = input("저장할 파일 이름을 입력하세요 (확장자 제외): ").strip()
+                docx_name = input("저장할 파일 이름을 입력하세요 (확장자 제외, 엔터 누르면 자동 생성): ").strip()
                 if not docx_name:
-                    docx_name = "quiz_output"
+                    now = datetime.datetime.now()
+                    docx_name = now.strftime("quiz_%Y%m%d_%H%M%S")
                 try:
                     save_to_docx(quiz_items, f"{docx_name}.docx")
                 except Exception as e:
@@ -86,12 +105,11 @@ def main():
             print("[오류] 파일을 불러오지 못했습니다.\n")
             continue
 
-        # 사용자에게 프로그램 반복 실행 여부 묻기
         again = input("\n프로그램을 다시 실행하시겠습니까? (Y/N): ").strip().lower()
         if again != 'y':
             print("프로그램을 종료합니다. 감사합니다.")
             break
 
-# 프로그램 실행 진입점
+# --- 프로그램 실행 진입점 ---
 if __name__ == "__main__":
     main()
