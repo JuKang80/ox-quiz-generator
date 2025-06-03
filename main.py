@@ -58,6 +58,22 @@ def save_to_docx(quiz_items, filename="quiz_output.docx"):
     doc.save(filename)
     print(f"퀴즈가 Word 파일로 저장되었습니다: {filename}")
 
+# --- Y/N 입력을 받을 때 유효성 검사하며 묻는 함수 ---
+def ask_yes_no(prompt):
+    """
+    사용자에게 Y 또는 N만 입력 받도록 반복해서 묻는 함수.
+    Y이면 True, N이면 False 반환.
+    잘못된 입력 시 안내 메시지 출력 후 다시 질문.
+    """
+    while True:
+        ans = input(prompt).strip().lower()
+        if ans == 'y':
+            return True
+        elif ans == 'n':
+            return False
+        else:
+            print("[경고] Y 또는 N만 입력해주세요.")
+
 # --- 메인 프로그램 흐름을 담당하는 함수 ---
 def main():
     folder = "study_files"
@@ -68,8 +84,14 @@ def main():
             print("프로그램을 종료합니다.")
             break
 
+        print("\n0. 종료하기")  # 0 입력 시 종료 안내 추가
+
         try:
-            choice = int(input("\n불러올 파일 번호를 입력하세요: ")) - 1
+            choice = int(input("불러올 파일 번호를 입력하세요 (0 입력 시 종료): "))
+            if choice == 0:
+                print("프로그램을 종료합니다.")
+                break
+            choice -= 1  # 리스트 인덱스 맞춤
             if choice < 0 or choice >= len(files):
                 print("[경고] 잘못된 번호입니다.\n")
                 continue
@@ -91,8 +113,7 @@ def main():
             for i, q in enumerate(quiz_items, 1):
                 print(f"{i}. {q}")
 
-            save_docx = input("\n현재 퀴즈를 Word(.docx) 파일로 저장하시겠습니까? (Y/N): ").strip().lower()
-            if save_docx == 'y':
+            if ask_yes_no("\n현재 퀴즈를 Word(.docx) 파일로 저장하시겠습니까? (Y/N): "):
                 docx_name = input("저장할 파일 이름을 입력하세요 (확장자 제외, 엔터 누르면 자동 생성): ").strip()
                 if not docx_name:
                     now = datetime.datetime.now()
@@ -105,8 +126,7 @@ def main():
             print("[오류] 파일을 불러오지 못했습니다.\n")
             continue
 
-        again = input("\n프로그램을 다시 실행하시겠습니까? (Y/N): ").strip().lower()
-        if again != 'y':
+        if not ask_yes_no("\n프로그램을 다시 실행하시겠습니까? (Y/N): "):
             print("프로그램을 종료합니다. 감사합니다.")
             break
 
